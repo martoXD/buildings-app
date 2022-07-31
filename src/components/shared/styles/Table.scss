@@ -1,0 +1,42 @@
+table {
+    border-collapse: collapse;
+    thead {
+        
+        tr {
+
+            th {
+                text-align: left;
+                border: 1px solid black;
+                border-collapse: collapse;
+                width: 100px;
+                padding-left: 8px;
+            }
+        }
+    }
+
+    tbody {
+        tr {
+            td {
+                border: 1px solid #a5a9a3;
+                height: 70px;
+                padding-left: 8px;
+
+                input {
+                    width: 80%;
+                    outline: none;
+                    height: 20px;
+                    border-radius: 5px;
+                    border-style: double;
+                }
+            }
+        }
+    }
+}
+
+.centered {
+    text-align: center;
+}
+
+.extended {
+    width: 200px;
+}

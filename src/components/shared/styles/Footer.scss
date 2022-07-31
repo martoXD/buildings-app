@@ -1,0 +1,29 @@
+@import '../../../Global.scss';
+
+.footer-container {
+    height:70px;
+    background-color: #9b7c7c4d;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 7px;
+    border-bottom: 1px solid rgb(219, 219, 219);
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    z-index: 100;
+    -moz-box-shadow: 0 0 5px 5px #888;
+    -webkit-box-shadow: 0 0 5px 5px #888;
+    box-shadow: 0 0.5px 5px #888;
+
+    a {
+        margin: 0 10px 0 10px;
+        text-decoration: none;
+        color: $main-color;
+    }
+
+    h2 {
+        margin-right: 100px;
+        color: $main-color;
+    }
+}
