@@ -8,6 +8,7 @@ import {
 import Home from './pages/home/Home';
 import Buildings from './pages/buildings/Buildings';
 import Layout from './components/shared/Layout';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   return (

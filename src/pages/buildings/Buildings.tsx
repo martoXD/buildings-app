@@ -2,11 +2,12 @@ import * as React from "react";
 import Table from "../../components/shared/Table";
 import "./styles/Buildings.scss";
 import data from '../../mock-data.json';
+import * as yup from 'yup';
 
 type BuildingData = {
-  id: string,
+  id: number,
   name: string,
-  area: number,
+  area: string,
   location: string,
   image: string,
 };
@@ -24,6 +25,13 @@ const tableHeaders = {
   action: 'Action'
 };
 
+const buildingSchema = yup.object({
+  name: yup.string().required('Name is required').min(3, 'Name must be at least 3 characters long'),
+  area: yup.string().required('Area is required'),
+  location: yup.string().notRequired(),
+  image: yup.string().notRequired()
+});
+
 export class Buildings extends React.Component<{}, BuildingsState> {
 
   constructor(props: never){
@@ -38,7 +46,7 @@ export class Buildings extends React.Component<{}, BuildingsState> {
   render() {
     return (
       <div className="container">
-        <Table headers={tableHeaders} data={data} actions={['add','edit','delete']} />
+        <Table headers={tableHeaders} data={data} actions={['add','edit','delete']} validationSchema={buildingSchema} />
       </div>
     );
   }

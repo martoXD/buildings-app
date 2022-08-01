@@ -1,7 +1,6 @@
 table {
     border-collapse: collapse;
-    thead {
-        
+    thead {     
         tr {
 
             th {
@@ -24,7 +23,7 @@ table {
                 input {
                     width: 80%;
                     outline: none;
-                    height: 20px;
+                    height: 25px;
                     border-radius: 5px;
                     border-style: double;
                 }
@@ -40,3 +39,17 @@ table {
 .extended {
     width: 200px;
 }
+
+.error {
+    margin: 5px 0 0 0;
+    text-align: center;
+    width: 62%;
+    margin-bottom: 0px !important;
+}
+
+.icon {
+    margin: 5px;
+    cursor: pointer;
+}
+
+
