@@ -28,8 +28,8 @@ const tableHeaders = {
 const buildingSchema = yup.object({
   name: yup.string().required('Name is required').min(3, 'Name must be at least 3 characters long'),
   area: yup.string().required('Area is required'),
-  location: yup.string().notRequired(),
-  image: yup.string().notRequired()
+  location: yup.string().notRequired().nullable(),
+  image: yup.string().notRequired().nullable()
 });
 
 export class Buildings extends React.Component<{}, BuildingsState> {
@@ -46,7 +46,9 @@ export class Buildings extends React.Component<{}, BuildingsState> {
   render() {
     return (
       <div className="container">
-        <Table headers={tableHeaders} data={data} actions={['add','edit','delete']} validationSchema={buildingSchema} />
+        <div className="container-table">
+          <Table headers={tableHeaders} data={data} actions={['add','edit','delete']} validationSchema={buildingSchema} />
+        </div>
       </div>
     );
   }

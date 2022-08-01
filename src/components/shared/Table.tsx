@@ -3,7 +3,7 @@ import { OptionalObjectSchema } from "yup/lib/object";
 import './styles/Table.scss';
 import Alert from 'react-bootstrap/Alert';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark, faTrash, faPenSquare, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faXmark, faTrash, faPenSquare, faCheck, faAdd } from '@fortawesome/free-solid-svg-icons';
 
 type Props = {
   headers: object;
@@ -18,18 +18,21 @@ type State = {
     editedData: object;
     validationErrors: object;
     validationSchema: object;
+    isAdding: boolean;
+    addedData: any;
 };
 
 class Table extends React.Component<Props, State> {
 
   constructor(props: Props){
     super(props);
-    this.state = {rowId: 0, data: [], editedData: {}, validationErrors: {}, validationSchema: {}}
+    this.state = {rowId: 0, data: [], editedData: {}, addedData:{}, validationErrors: {}, validationSchema: {}, isAdding: false}
   };
 
   componentDidMount = (): void => {
+    let validationFields = this.props.validationSchema?.getDefault();
     this.setState((prevState) => ({ 
-        ...prevState, data: [...this.props.data], validationSchema: { ...this.props.validationSchema }
+        ...prevState, data: [...this.props.data], validationSchema: { ...this.props.validationSchema }, addedData: validationFields
     }));
   };
 
@@ -43,14 +46,134 @@ class Table extends React.Component<Props, State> {
     return <th key={i}>{th}</th>
   };
 
-  renderRowData = (d:any, i:number): JSX.Element => {
-    return <td key={i}>{d}</td>;
+  renderRowData = (d:any, i:number, actions?: Array<string>): JSX.Element => {
+    return (
+      this.state.rowId === d?.id ? this.renderEditableRow(d,i) :
+      (<tr key={i}>
+          {/* {Object.values(d).map((value: any,i: number) => {
+              return (
+                  Object.keys(d)[i] !== "image" ? <td key={i}>{value}</td> : 
+                  <td key={i}><img alt={value} src={value} /></td>
+              )
+          })} */}
+          {Object.entries(d).map(([key, value]: any, i: number) => {
+              return (
+                  key !== "image" ? <td key={i}>{value}</td> : 
+                  value && <td key={i}><img alt={value} src={value}/></td>
+              )
+          })}
+          {
+          <td className="centered">
+              {actions?.some(a => a.toLowerCase().match('edit')) && 
+              <FontAwesomeIcon icon={faPenSquare} className="icon" size="lg" onClick={(e: React.MouseEvent<SVGSVGElement>) => this.handleEditClick(e, d.id)} />}
+              {actions?.some(a => a.toLowerCase().match('delete')) && 
+              <FontAwesomeIcon icon={faTrash} className="icon" size="lg" onClick={(e: React.MouseEvent<SVGSVGElement>) => this.handleDeleteClick(e, d.id)} />}
+          </td>
+          }
+      </tr>)
+    )
   };
 
-  handleEditFormSubmit = (event: React.MouseEvent<SVGSVGElement, MouseEvent>): void => {
+  renderAddableRow = (): JSX.Element => {
+    const data = this.state.data;
+    const nextId = data.length > 0 ? this.state.data[data.length - 1].id + 1 : 1;
+    return(
+      <tr>
+        {data.length > 0 && Object.keys(data[0]).map((value: any, i: number) => {
+          return (
+            Object.keys(data[0])[i] === 'id' ? <td key={i}>{nextId}</td> :
+            <td key={i}>
+              <input
+                type="text"
+                name={value}
+                placeholder={value}
+                onChange={(e) => this.handleEditFormChange(e)}
+                ></input>
+            </td>
+          )
+        })}
+        <td className="centered">
+          {Object.values(this.state.validationErrors).every(v => v === null) && 
+          <FontAwesomeIcon size="lg" className="icon" icon={faCheck} onClick={(e: React.MouseEvent<SVGSVGElement>) => this.handleAddSubmit(e)} />}
+          <FontAwesomeIcon size="lg" className="icon" icon={faXmark} onClick={(e: React.MouseEvent<SVGSVGElement>) => this.handleAddCancel(e)} />
+        </td>
+      </tr>)
+  };
+
+  renderEditableRow = (d:any, i:number): JSX.Element => {
+    return (
+        <tr key={i}>
+          {Object.values(d).map((row: any,i: number) => {
+            return (
+                Object.keys(d)[i] === 'id' ? <td key={i}>{row}</td> :
+                <td key={i}>
+                    <input
+                    type="text"
+                    name={Object.keys(d)[i]}
+                    placeholder={row}
+                    onChange={(e) => this.handleEditFormChange(e)}
+                    ></input>
+                </td>
+            )
+          })}
+          <td className="centered">
+            {Object.values(this.state.validationErrors).every(v => v === null) && 
+            <FontAwesomeIcon size="lg" className="icon" icon={faCheck} onClick={(e: React.MouseEvent<SVGSVGElement>) => this.handleEditFormSubmit(e)} />}
+            <FontAwesomeIcon size="lg" className="icon" icon={faXmark} onClick={(e: React.MouseEvent<SVGSVGElement>) => this.handleCancelClick(e)} />
+          </td>
+        </tr>
+      );
+  };
+
+  renderError = (value: string, i: number): JSX.Element => {
+    return (
+      <Alert className='error' key={i} variant='danger'>
+        {value}
+      </Alert>
+    )
+  };
+
+  handleAddSubmit = (event: React.MouseEvent<SVGSVGElement>): void => {
+    event.preventDefault();
+    if(Object.values(this.state.addedData).some((d:any) => d === undefined)){
+      return;
+    }
+    const newData: any[] = [...this.state.data];
+
+    const index = newData.length > 0 ? this.state.data[newData.length - 1].id + 1 : 1;
+
+    if(Object.values(this.state.addedData).length > 0){
+      if(Object.keys(this.state.addedData)[0] === 'id'){
+        newData[index] = { ...this.state.addedData };
+      }
+      else{
+        const reversedValues = Object.values(this.state.addedData).reverse();
+        const reversedKeys = Object.keys(this.state.addedData).reverse();
+
+        reversedKeys.forEach((value,key) => {
+          console.log(key, value);
+          newData[index] = { ...newData[index], [value]: reversedValues[key] };
+        });
+      }
+    }
+    console.log(newData);
+
+    this.setState((prevState) => ({ 
+        ...prevState, data: newData, addedData: {}, isAdding: false
+    }));
+  };
+
+  handleAddCancel = (event: React.MouseEvent<SVGSVGElement>): void => {
+    event.preventDefault();
+    this.setState((prevState) => ({ 
+      ...prevState, isAdding: false, validationErrors: {}
+    }));
+  };
+
+  handleEditFormSubmit = (event: React.MouseEvent<SVGSVGElement>): void => {
     event.preventDefault();
     
-    const newData: any[] = [...this.state.data];
+    const newData: any[] = [...this.state.data.filter(d => d !== undefined)];
 
     const index: number = newData.findIndex((data) => data.id === this.state.rowId);
 
@@ -69,86 +192,76 @@ class Table extends React.Component<Props, State> {
 
     const fieldName: any = event.target.getAttribute("name");
     const fieldValue: string = event.target.value;
-
-    const newFormData = { ...this.props.data.find(d => d.id === this.state.rowId)};
+    
+    let newFormData: any = { ...this.state.data.find(d => d.id === this.state.rowId), ...this.state.editedData};
+    if(this.state.isAdding){
+      newFormData =  { ...this.state.addedData };
+    }
     newFormData[fieldName] = fieldValue;
 
     // validate field
     validationSchema.validate(newFormData, { abortEarly: false }).then(() => {
-      this.setState((prevState) => ({ 
-        ...prevState, validationErrors: { ...prevState.validationErrors, [fieldName]: null }
+      this.setState((prevState) => ({
+        ...prevState, validationErrors: { [fieldName]: null }
       }));
     })
     .catch((err:any) => {
-      this.setState((prevState) => ({ 
-        ...prevState, validationErrors: { ...prevState.validationErrors, [fieldName]: err.message}
+      this.setState((prevState) => ({
+        ...prevState, validationErrors: { ...prevState.validationErrors, [fieldName]: err.message }
       }));
     });
 
-    this.setState((prevState) => ({ 
+    if(this.state.isAdding){
+      this.setState((prevState) => ({
+        ...prevState, addedData: newFormData
+      }));
+    }
+    else {
+      this.setState((prevState) => ({
         ...prevState, editedData: newFormData
-    }));
+      }));
+    }
   };
 
-  handleEditClick = (event: React.MouseEvent<SVGSVGElement, MouseEvent>, id: number): void => {
+  handleEditClick = (event: React.MouseEvent<SVGSVGElement>, id: number): void => {
     event.preventDefault();
-    this.setState((prevState) => ({ 
+    if(!this.state.isAdding){
+      this.setState((prevState) => ({ 
         ...prevState, rowId: id
-    }));
+      }));
+    }
   };
 
-  handleCancelClick = (event: React.MouseEvent<SVGSVGElement, MouseEvent>): void => {
+  handleCancelClick = (event: React.MouseEvent<SVGSVGElement>): void => {
     event.preventDefault();
     this.setState((prevState) => ({ 
         ...prevState, rowId: 0, validationErrors: {}
     }));
   };
 
-  handleDeleteClick = (event: React.MouseEvent<SVGSVGElement, MouseEvent>, id: number): void => {
+  handleDeleteClick = (event: React.MouseEvent<SVGSVGElement>, id: number): void => {
     event.preventDefault();
-    let filteredData: any[] = this.state.data.filter(d => d.id !== id);
-    this.setState((prevState) => ({ 
+    let filteredData: any[] = this.state.data.filter(d => d !== undefined).filter(d => d.id !== id);
+    if(this.state.data.length !== 1){
+      this.setState((prevState) => ({ 
         ...prevState, data: filteredData
+      }));
+    }
+  };
+
+  handleAddClick = (event: React.MouseEvent<SVGSVGElement>,): void => {
+    event.preventDefault();
+    this.setState((prevState) => ({ 
+      ...prevState, isAdding: true, rowId: 0, addedData: { ...prevState.addedData , id: prevState.data.length + 1 }
     }));
-  };
-
-  renderEditableRow = (d:any, i:number): JSX.Element => {
-    return (
-        <tr key={i}>
-          {Object.values(d).map((row: any,i: number) => {
-            return (
-                Object.keys(d)[i] === 'id' ? this.renderRowData(row,i) :
-                <td key={i}>
-                    <input
-                    type="text"
-                    name={Object.keys(d)[i]}
-                    placeholder={row}
-                    onChange={(e) => this.handleEditFormChange(e)}
-                    ></input>
-                </td>
-            )
-          })}
-          <td className="centered">
-            {Object.values(this.state.validationErrors).every(v => v === null) && 
-            <FontAwesomeIcon size="lg" className="icon" icon={faCheck} onClick={(e) => this.handleEditFormSubmit(e)} />}
-            <FontAwesomeIcon size="lg" className="icon" icon={faXmark} onClick={(e) => this.handleCancelClick(e)} />
-          </td>
-        </tr>
-      );
-  };
-
-  renderError = (value: string, i: number): JSX.Element => {
-    return (
-      <Alert className='error' key={i} variant='danger'>
-        {value}
-      </Alert>
-    )
   };
 
   render() {
     const {headers, actions} = this.props;
     return (
       <React.Fragment>
+            {actions?.some(a => a.toLowerCase().match('add')) && 
+            <FontAwesomeIcon icon={faAdd} className="icon" size="lg" onClick={(e: React.MouseEvent<SVGSVGElement>) => this.handleAddClick(e)} />}
             <table>
                 <thead>
                     <tr>
@@ -160,26 +273,12 @@ class Table extends React.Component<Props, State> {
                     </tr>
                 </thead>
                 <tbody>
-                {this.state.data?.map((d,i) => {
+                {this.state.data?.filter(d => d !== undefined).map((d,i) => {
                     return (
-                        this.state.rowId === d.id ? this.renderEditableRow(d,i) :
-                        (<tr key={i}>
-                            {Object.values(d).map((value,i) => {
-                                return (
-                                    this.renderRowData(value,i)
-                                )
-                            })}
-                            {
-                            <td className="centered">
-                                {actions?.some(a => a.toLowerCase().match('edit')) && 
-                                <FontAwesomeIcon icon={faPenSquare} className="icon" size="lg" onClick={e => this.handleEditClick(e, d.id)} />}
-                                {actions?.some(a => a.toLowerCase().match('delete')) && 
-                                <FontAwesomeIcon icon={faTrash} className="icon" size="lg" onClick={e => this.handleDeleteClick(e, d.id)} />}
-                            </td>
-                            }
-                        </tr>)
+                        this.renderRowData(d,i,actions)
                     )
                 })}
+                {this.state.isAdding && this.renderAddableRow()}
                 </tbody>
             </table>
             {Object.values(this.state.validationErrors).map((value, i) => {

@@ -2,36 +2,36 @@
     {
         "id": 1,
         "name": "Windsor",
-        "area": 200,
+        "area": "200",
         "location": "London",
-        "image": ""
+        "image": "https://gigantic.store/wp-content/uploads/2019/04/Building-800-x-600.jpg"
     },
     {
         "id": 2,
         "name": "Astoria",
-        "area": 300,
+        "area": "300",
         "location": "Paris",
-        "image": ""
+        "image": "https://png.pngtree.com/png-clipart/20190520/original/pngtree-2-5d-building-2-5d-bungalow-building-bungalow-png-image_3920651.jpg"
     },
     {
         "id": 3,
         "name": "Blue Lagoon",
-        "area": 150,
+        "area": "150",
         "location": "Amsterdam",
-        "image": ""
+        "image": "https://www.nicepng.com/png/detail/191-1911347_cartoon-building-png-office-building-cartoon.png"
     },
     {
         "id": 4,
         "name": "Sofia Estate",
-        "area": 400,
+        "area": "400",
         "location": "Sofia",
-        "image": ""
+        "image": "https://cdn.dribbble.com/users/1842274/screenshots/13911792/comp-1_1-min_4x.gif?compress=1&resize=400x300"
     },
     {
         "id": 5,
         "name": "Varna Palace",
-        "area": 350,
+        "area": "350",
         "location": "Varna",
-        "image": ""
+        "image": "https://png.pngtree.com/png-clipart/20190920/original/pngtree-cartoon-2-5d-blue-three-dimensional-building-png-image_4642069.jpg"
     }
 ]
