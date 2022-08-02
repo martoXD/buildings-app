@@ -43,7 +43,6 @@ export class Buildings extends React.Component<{}, BuildingsState> {
 
   componentDidMount = async (): Promise<void> => {
     let data = await getData();
-    console.log('buildings data -> ', this.state.buildings);
     this.setState({ buildings: data});
   };
 

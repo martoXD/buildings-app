@@ -40,7 +40,6 @@ class Table extends React.Component<Props, State> {
 
   componentDidMount = (): void => {
     let validationFields = this.props.validationSchema?.getDefault();
-    console.log('table data -> ', this.state.data);
     this.setState((prevState) => ({ 
         ...prevState, 
         data: [...this.props.data], 
@@ -163,7 +162,6 @@ class Table extends React.Component<Props, State> {
         const reversedKeys = Object.keys(this.state.addedData).reverse();
 
         reversedKeys.forEach((value,key) => {
-          console.log(key, value);
           newData[index] = { ...newData[index], [value]: reversedValues[key] };
         });
       }
