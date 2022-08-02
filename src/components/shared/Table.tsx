@@ -4,6 +4,7 @@ import './styles/Table.scss';
 import Alert from 'react-bootstrap/Alert';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark, faTrash, faPenSquare, faCheck, faAdd } from '@fortawesome/free-solid-svg-icons';
+import * as validator from "../../utils/validator";
 
 type Props = {
   headers: object;
@@ -15,24 +16,36 @@ type Props = {
 type State = {
     rowId: number;
     data: any[];
-    editedData: object;
     validationErrors: object;
     validationSchema: object;
     isAdding: boolean;
     addedData: any;
+    editedData: any;
 };
 
 class Table extends React.Component<Props, State> {
 
   constructor(props: Props){
     super(props);
-    this.state = {rowId: 0, data: [], editedData: {}, addedData:{}, validationErrors: {}, validationSchema: {}, isAdding: false}
+    this.state = {
+      rowId: 0, 
+      data: [], 
+      editedData: {}, 
+      addedData:{}, 
+      validationErrors: {}, 
+      validationSchema: {}, 
+      isAdding: false
+    }
   };
 
   componentDidMount = (): void => {
     let validationFields = this.props.validationSchema?.getDefault();
+    console.log('table data -> ', this.state.data);
     this.setState((prevState) => ({ 
-        ...prevState, data: [...this.props.data], validationSchema: { ...this.props.validationSchema }, addedData: validationFields
+        ...prevState, 
+        data: [...this.props.data], 
+        validationSchema: { ...this.props.validationSchema }, 
+        addedData: validationFields
     }));
   };
 
@@ -59,7 +72,7 @@ class Table extends React.Component<Props, State> {
           {Object.entries(d).map(([key, value]: any, i: number) => {
               return (
                   key !== "image" ? <td key={i}>{value}</td> : 
-                  value && <td key={i}><img alt={value} src={value}/></td>
+                  value === null || value === undefined ? <td key={i}></td> : <td key={i}><img alt={value} src={value}/></td>
               )
           })}
           {
@@ -133,11 +146,10 @@ class Table extends React.Component<Props, State> {
     )
   };
 
-  handleAddSubmit = (event: React.MouseEvent<SVGSVGElement>): void => {
+  handleAddSubmit = async (event: React.MouseEvent<SVGSVGElement>): Promise<void> => {
     event.preventDefault();
-    if(Object.values(this.state.addedData).some((d:any) => d === undefined)){
-      return;
-    }
+    let validationSchema: any = this.props.validationSchema;
+    
     const newData: any[] = [...this.state.data];
 
     const index = newData.length > 0 ? this.state.data[newData.length - 1].id + 1 : 1;
@@ -156,11 +168,13 @@ class Table extends React.Component<Props, State> {
         });
       }
     }
-    console.log(newData);
+    let [isValid] = await validator.validateObject(validationSchema, newData[index]);
 
-    this.setState((prevState) => ({ 
-        ...prevState, data: newData, addedData: {}, isAdding: false
-    }));
+    if(isValid){
+      this.setState((prevState) => ({ 
+        ...prevState, data: newData, addedData: { ...this.props.validationSchema?.getDefault() }, isAdding: false
+      }));
+    }
   };
 
   handleAddCancel = (event: React.MouseEvent<SVGSVGElement>): void => {
@@ -182,34 +196,35 @@ class Table extends React.Component<Props, State> {
     }
 
     this.setState((prevState) => ({ 
-        ...prevState, editedData: {}, data: newData, rowId: 0
+        ...prevState, data: newData, rowId: 0
     }));
   };
 
-  handleEditFormChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+  handleEditFormChange = async (event: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
     event.preventDefault();
     let validationSchema: any = this.props.validationSchema;
 
     const fieldName: any = event.target.getAttribute("name");
     const fieldValue: string = event.target.value;
     
-    let newFormData: any = { ...this.state.data.find(d => d.id === this.state.rowId), ...this.state.editedData};
+    let newFormData: any = { ...this.state.data.find(d => d?.id === this.state.rowId) };
     if(this.state.isAdding){
       newFormData =  { ...this.state.addedData };
     }
     newFormData[fieldName] = fieldValue;
 
     // validate field
-    validationSchema.validate(newFormData, { abortEarly: false }).then(() => {
+    let [isValid, field] = await validator.validateField(validationSchema, newFormData, fieldName);
+    if(isValid){
       this.setState((prevState) => ({
         ...prevState, validationErrors: { [fieldName]: null }
       }));
-    })
-    .catch((err:any) => {
+    }
+    else {
       this.setState((prevState) => ({
-        ...prevState, validationErrors: { ...prevState.validationErrors, [fieldName]: err.message }
+        ...prevState, validationErrors: { ...prevState.validationErrors, [fieldName]: field }
       }));
-    });
+    }
 
     if(this.state.isAdding){
       this.setState((prevState) => ({
@@ -252,7 +267,7 @@ class Table extends React.Component<Props, State> {
   handleAddClick = (event: React.MouseEvent<SVGSVGElement>,): void => {
     event.preventDefault();
     this.setState((prevState) => ({ 
-      ...prevState, isAdding: true, rowId: 0, addedData: { ...prevState.addedData , id: prevState.data.length + 1 }
+      ...prevState, isAdding: true, rowId: 0, addedData: { ...prevState.addedData , id: prevState.data[prevState.data.length - 1].id + 1 }
     }));
   };
 

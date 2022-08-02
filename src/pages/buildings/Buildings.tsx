@@ -1,8 +1,10 @@
 import * as React from "react";
 import Table from "../../components/shared/Table";
 import "./styles/Buildings.scss";
-import data from '../../mock-data.json';
 import * as yup from 'yup';
+import { getData } from "../../utils/service";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUserCircle } from '@fortawesome/free-solid-svg-icons';
 
 type BuildingData = {
   id: number,
@@ -39,17 +41,26 @@ export class Buildings extends React.Component<{}, BuildingsState> {
     this.state = {buildings: []};
   };
 
-  componentDidMount = () => {
-    //this.setState(state => {buildings: JSON.parse(data.toString())})
+  componentDidMount = async (): Promise<void> => {
+    let data = await getData();
+    console.log('buildings data -> ', this.state.buildings);
+    this.setState({ buildings: data});
   };
 
   render() {
     return (
-      <div className="container">
-        <div className="container-table">
-          <Table headers={tableHeaders} data={data} actions={['add','edit','delete']} validationSchema={buildingSchema} />
+      <>
+        <div className="header">
+          <h2>WELCOME</h2>
+          <FontAwesomeIcon size="lg" className="icon" icon={faUserCircle} />
         </div>
-      </div>
+        <div className="container">
+          <div className="container-table">
+            {this.state.buildings.length > 0 && 
+            <Table headers={tableHeaders} data={this.state.buildings} actions={['add','edit','delete']} validationSchema={buildingSchema} />}
+          </div>
+        </div>
+      </>
     );
   }
 }
